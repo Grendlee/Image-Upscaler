@@ -100,7 +100,12 @@ void bilinearUpscaling(const std::string& inputPath, int scaleFactor = 4) {
 
 // Run ESRGAN
 bool runESRGAN(const std::string& inputPath, const std::string& outputPath) {
-    std::string command = ".\\realesrgan-ncnn-vulkan.exe -i " + inputPath + " -o " + outputPath + " -n realesrgan-x4plus";
+    //on linux
+    std::string command = "./realesrgan-ncnn-vulkan -i " + inputPath + " -o " + outputPath + " -n realesrgan-x4plus";
+
+
+    //on windows
+    //std::string command = ".\\realesrgan-ncnn-vulkan.exe -i " + inputPath + " -o " + outputPath + " -n realesrgan-x4plus";
     std::cout << "ESRGAN-upscaled image saved as output_ESRGAN.png\n";
     return system(command.c_str()) == 0;
 }
@@ -279,21 +284,21 @@ void computeAndPrintPSNR(const std::string& ground, const std::string& test) {
 
 int main(int argc, char** argv) {
 
-    // // run bilinear upscaler
-    // bilinearUpscaling("input_compressed.jpg");
+    // run bilinear upscaler
+    bilinearUpscaling("input_compressed.jpg");
 
-    // // run ESRGAN
-    // std::cout << "Running ESRGAN...\n";
-    // if (!runESRGAN("input_compressed.jpg", "output_esrgan.png")) {
-    //     std::cerr << "ESRGAN failed to run\n";
-    //     return 1;
-    // }
+    // run ESRGAN
+    std::cout << "Running ESRGAN...\n";
+    if (!runESRGAN("input_compressed.jpg", "output_esrgan.png")) {
+        std::cerr << "ESRGAN failed to run\n";
+        return 1;
+    }
 
-    // //for visual comparison of upscaled images
-    // nearestNeighborSampling("input_compressed.jpg", "resized_true_input_compressed.png");
+    //for visual comparison of upscaled images
+    nearestNeighborSampling("input_compressed.jpg", "resized_true_input_compressed.png");
 
-    // //to calc PSNR
-    // nearestNeighborSampling("input.jpg", "resized_true_input.png");
+    //to calc PSNR
+    nearestNeighborSampling("input.jpg", "resized_true_input.png");
 
 
 
@@ -301,63 +306,48 @@ int main(int argc, char** argv) {
     int w1, h1, c1;
     int w2, h2, c2;
 
+    std::cerr << std::endl;
     // Load ground truth image
-    std::vector<unsigned char> groundTruth = loadImage("resized_true_input.png", w1, h1, c1);
+    auto groundTruth = loadImage("resized_true_input.png", w1, h1, c1);
 
-    // Now load and compute PSNR against bilinear output in a tight block
-    {
-        std::vector<unsigned char> upscaledImage = loadImage("output_esrgan.png", w2, h2, c2);
-        if (w1 != w2 || h1 != h2 || c1 != c2) {
-            std::cerr << "Image dimensions do not match\n";
-        } else {
-            std::cout << "PSNR for output_bilinear.png: " << computePSNR(groundTruth, upscaledImage) << " dB\n";
-        }
+    auto upscaledImage = loadImage("output_bilinear.png", w2, h2, c2);
+    
+    if (w1 != w2 || h1 != h2 || c1 != c2) {
+        std::cerr << "Image dimensions do not match\n";
+    } else {
+        std::cout << "PSNR for output_bilinear.png: " << computePSNR(groundTruth, upscaledImage) << " dB\n";
+    }
+    
+
+    if (!std::filesystem::exists("output_esrgan.png")) {
+        std::cerr << "output_esrgan.png was not generated. Skipping PSNR.\n";
+        return 1;
+    }
+    
+     
+
+    std::cerr << std::endl;
+    upscaledImage = loadImage("output_esrgan.png", w2, h2, c2);
+    std::cout << "ESRGAN size: " << w1 << "x" << h1 << std::endl;
+    std::cout << "Ground truth size: " << w2 << "x" << h2 << std::endl;
+
+    // check if images have same dimensions
+    if (w1 != w2 || h1 != h2 || c1 != c2) {
+        std::cerr << "Images must have the same dimensions for PSNR\n";
+    } else { //
+        std::cout << "The PSNR for output_esrgan.png is: " << computePSNR(groundTruth, upscaledImage) << " dB\n";
     }
 
+    std::cerr << std::endl;
+    upscaledImage = loadImage("resized_true_input.png", w2, h2, c2);
 
-
-
-
-
-    // auto groundTruth = loadImage("resized_true_input.png", w1, h1, c1);
-
-    // if (!std::filesystem::exists("output_esrgan.png")) {
-    //     std::cerr << "output_esrgan.png was not generated. Skipping PSNR.\n";
-    //     return 1;
-    // }
-    // std::cerr << "attempting to load output_esrgan.png" << std::endl;
-
-    // auto upscaledImage = loadImage("output_esrgan.png", w2, h2, c2);
-    
-
-    // // check if images have same dimensions
-    // if (w1 != w2 || h1 != h2 || c1 != c2) {
-    //     std::cerr << "Images must have the same dimensions for PSNR\n";
-    // } else { //
-    //     std::cout << "The PSNR for output_esrgan.png is: " << computePSNR(groundTruth, upscaledImage) << " dB\n";
-    // }
-
-
-    // auto upscaledImage = loadImage("output_bilinear.png", w2, h2, c2);
-
-    
-
-    // // check if images have same dimensions
-    // if (w1 != w2 || h1 != h2 || c1 != c2) {
-    //     std::cerr << "Images must have the same dimensions for PSNR\n";
-    // } else { //
-    //     std::cout << "The PSNR for output_bilinear.png is: " << computePSNR(groundTruth, upscaledImage) << " dB\n";
-    // }
-
-    // groundTruth = loadImage("resized_true_input.png", w1, h1, c1);
-    // upscaledImage = loadImage("resized_true_input.png", w2, h2, c2);
-
-    // // check if images have same dimensions
-    // if (w1 != w2 || h1 != h2 || c1 != c2) {
-    //     std::cerr << "Images must have the same dimensions for PSNR\n";
-    // } else { //
-    //     std::cout << "The PSNR for resized_true_input.png is: " << computePSNR(groundTruth, upscaledImage) << " dB\n";
-    // }
+    // check if images have same dimensions
+    if (w1 != w2 || h1 != h2 || c1 != c2) {
+        std::cerr << "Images must have the same dimensions for PSNR\n";
+    } else { //
+        std::cout << "The PSNR for resized_true_input.png is: " << computePSNR(groundTruth, upscaledImage) << " dB\n";
+        std::cout << "If PSNR is inf, this is expected as there are no differences between the two images";
+    }
 
     // // run tests
     // ::testing::InitGoogleTest(&argc, argv);
