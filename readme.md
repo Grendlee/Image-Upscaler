@@ -1,33 +1,52 @@
-# Image-Upscaler
+# 🖼️ Image-Upscaler
 
-# Upscaling methods
-1. Bilinear interpolation (A great video explanation: https://www.youtube.com/watch?v=AqscP7rc8_M)
-2. ESRGAN
+This project performs image upscaling using two different methods:
 
-# Testing Upscaling accuracy.
-1. PSNR
-2. SSIM
+---
 
+## Upscaling Methods
 
+1. **Bilinear Interpolation**
+   - A simple, fast method that blends pixels linearly in both directions.
+   - 📺 [Video Explanation](https://www.youtube.com/watch?v=AqscP7rc8_M)
 
+2. **Pre-trained ESRGAN (Enhanced Super Resolution GAN)**
+   - A deep learning-based upscaling method that produces photorealistic details.
+   - External Pre-trained ESRGAN found here: **[Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN/?tab=readme-ov-file)** for deep-learning-based super-resolution.
 
-# Compile 
+---
 
+## Accuracy Testing
 
+To evaluate upscaling quality, this project uses:
 
-# Windows
+1. **PSNR (Peak Signal-to-Noise Ratio)**  
+   - Measures how close the upscaled image is to a known high-resolution image.  
+   - Higher is better.  
+   - A value above **30 dB** is generally considered good. A value above **40 dB** is considered excellent, indicating that the upscaled image is nearly indistinguishable from the original high-resolution image.
 
-Start Menu → Search:
+2. **SSIM (Structural Similarity Index)** (coming soon)  
+   - Compares perceptual differences like edges and contrast.
 
-Developer Command Prompt for VS 2022
+Tests verify whether the upscaled image (bilinear or ESRGAN) is **closer to the high-res ground truth** than the original low-res input.
 
+---
 
-cl main.cpp /EHsc /Feupscaler.exe /std:c++17
+## Google Test Integration
 
+Google Test is used to:
 
-PSNR (dB) | Image Quality | Notes
-∞ | Perfect match | Pixel-perfect identical images
-> 40 | Excellent | Nearly indistinguishable by human eye
-30–40 | Good | Slight difference, acceptable quality
-20–30 | Poor | Noticeable degradation
-< 20 | Bad | Heavily distorted
+- Compare `input.jpg` to `source.png` (ground truth)
+- Compare `output.png` and `output_esrgan.png` to `source.png`
+- Assert that:
+  - `PSNR(output.png) > PSNR(input.jpg)`
+  - `PSNR(output_esrgan.png) > PSNR(input.jpg)`
+
+---
+
+## Compile
+
+Use the following command to compile with **Microsoft Visual C++ (`cl`)**:
+
+```cmd
+g++ main.cpp -o upscaler.exe -std=c++17
