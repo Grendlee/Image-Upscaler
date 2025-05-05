@@ -18,6 +18,7 @@ This project performs image upscaling using two different methods:
    - Directly replicates pixel values to scale the image.
    - Fastest method with no interpolation.
    - Useful for testing baseline performance or preserving sharp edges in pixel art.
+   - Needed to compare peak-signal-to-noise-ration (PNSR) later.
 
 ---
 
