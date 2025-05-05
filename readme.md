@@ -55,7 +55,15 @@ Tests include:
 ## Compilation
  **Note:** Loading images on windows will cause a memory problem at "loadImage". Compiling using a Linux system is recommended.
 
-
 ```bash
 g++ -std=c++17 -O2 -o upscaler main.cpp
 ```
+
+---
+
+## Platform-Specific Instructions
+
+This project supports both **macOS/Linux** and **Windows**. The ESRGAN upscaling backend uses a precompiled binary (`realesrgan-ncnn-vulkan`) that differs by platform.
+
+In the runESRGAN(), make sure to uncomment the correct version according to your operating system.
+
