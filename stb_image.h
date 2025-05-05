@@ -793,7 +793,7 @@ static int stbi__sse2_available(void)
 #endif
 
 #ifndef STBI_MAX_DIMENSIONS
-#define STBI_MAX_DIMENSIONS (1 << 24)
+#define STBI_MAX_DIMENSIONS (20000)
 #endif
 
 ///////////////////////////////////////////////

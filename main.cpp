@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <fstream>
 #include <cstdlib> // for system()
+#include <filesystem>
 // #include <gtest/gtest.h>
 
 // Performs bilinear interpolation on a single pixel channel (R, G, or B)
@@ -50,7 +51,7 @@ float bilinearSample(const unsigned char* imageData, int inputWidth, int inputHe
 void bilinearUpscaling(const std::string& inputPath, int scaleFactor = 4) {
     int inputWidth, inputHeight, inputChannels;
 
-    unsigned char* inputImage = stbi_load("input.jpg", &inputWidth, &inputHeight, &inputChannels, 3);
+    unsigned char* inputImage = stbi_load(inputPath.c_str(), &inputWidth, &inputHeight, &inputChannels, 3);
 
     if (!inputImage) {
         std::cerr << "Failed to load input.jpg\n";
@@ -87,6 +88,8 @@ void bilinearUpscaling(const std::string& inputPath, int scaleFactor = 4) {
             }
         }
     }
+    std::cout << "Writing image: output_bilinear.png ("
+    << outputWidth << "x" << outputHeight << ")\n";
     //write the output image to disk
     stbi_write_png("output_bilinear.png", outputWidth, outputHeight, 3, outputImage.data(), outputWidth * 3);
     stbi_image_free(inputImage);
@@ -102,7 +105,7 @@ bool runESRGAN(const std::string& inputPath, const std::string& outputPath) {
     return system(command.c_str()) == 0;
 }
 
-void nearestNeighborSampling(const std::string& inputPath) {
+void nearestNeighborSampling(const std::string& inputPath, const std::string& outputPath) {
     int inputWidth, inputHeight, inputChannels;
 
     // Load the input image (force 3 channels: RGB)
@@ -132,10 +135,12 @@ void nearestNeighborSampling(const std::string& inputPath) {
     }
 
     // Save resized image
-    stbi_write_png("resized_true.png", outputWidth, outputHeight, 3, outputImage.data(), outputWidth * 3);
+    stbi_write_png(outputPath.c_str(), outputWidth, outputHeight, 3, outputImage.data(), outputWidth * 3);
     stbi_image_free(inputImage);
 
-    std::cout << "Nearest-neighbor resized image saved as resized_true.png\n";
+    std::cout << "Nearest-neighbor resized image saved as";
+    std::cout << outputPath.c_str();
+    std::cout << "\n";
 }
 
 
@@ -155,8 +160,8 @@ double computeMSE(const std::vector<unsigned char>& a, const std::vector<unsigne
 }
 
 //calc PSNR
-double computePSNR(const std::vector<unsigned char>& a, const std::vector<unsigned char>& b) {
-    double mse = computeMSE(a, b);
+double computePSNR(const std::vector<unsigned char>& groundTruth, const std::vector<unsigned char>& testImage) {
+    double mse = computeMSE(groundTruth, testImage);
     
     //image a is the same as image b
     if (mse == 0) return INFINITY;
@@ -166,20 +171,31 @@ double computePSNR(const std::vector<unsigned char>& a, const std::vector<unsign
 }
 
 
-//load image and return raw pixel data as a vector
 std::vector<unsigned char> loadImage(const std::string& path, int& width, int& height, int& channels) {
+    std::cerr << "Trying to load: " << path << "\n";
     
-    //load image
     unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, 3);
     
-    if (!data) throw std::runtime_error("Failed to load " + path);
-    
+    if (!data) {
+        std::cerr << "stbi_load failed. Reason: " << stbi_failure_reason() << "\n";
+        throw std::runtime_error("Failed to load " + path);
+    }
+
     std::vector<unsigned char> vec(data, data + width * height * 3);
-    
     stbi_image_free(data);
-    
     return vec;
 }
+
+void computeAndPrintPSNR(const std::string& ground, const std::string& test) {
+    int w1, h1, c1;
+    int w2, h2, c2;
+    auto img1 = loadImage(ground, w1, h1, c1);
+    auto img2 = loadImage(test, w2, h2, c2);
+    std::cout << computePSNR(img1, img2) << " dB\n";
+    // memory automatically released when vectors go out of scope
+}
+
+
 
 // // Google Test: Bilinear PSNR
 // TEST(UpscaleTest, BilinearUpscaleIsBetterThanInput) {
@@ -263,21 +279,85 @@ std::vector<unsigned char> loadImage(const std::string& path, int& width, int& h
 
 int main(int argc, char** argv) {
 
-    // run bilinear upscaler
-    bilinearUpscaling("input_compressed.jpg");
+    // // run bilinear upscaler
+    // bilinearUpscaling("input_compressed.jpg");
 
-    // run ESRGAN
-    std::cout << "Running ESRGAN...\n";
-    if (!runESRGAN("input_compressed.jpg", "output_esrgan.png")) {
-        std::cerr << "ESRGAN failed to run\n";
-        return 1;
+    // // run ESRGAN
+    // std::cout << "Running ESRGAN...\n";
+    // if (!runESRGAN("input_compressed.jpg", "output_esrgan.png")) {
+    //     std::cerr << "ESRGAN failed to run\n";
+    //     return 1;
+    // }
+
+    // //for visual comparison of upscaled images
+    // nearestNeighborSampling("input_compressed.jpg", "resized_true_input_compressed.png");
+
+    // //to calc PSNR
+    // nearestNeighborSampling("input.jpg", "resized_true_input.png");
+
+
+
+    //load images for PSNR calculation
+    int w1, h1, c1;
+    int w2, h2, c2;
+
+    // Load ground truth image
+    std::vector<unsigned char> groundTruth = loadImage("resized_true_input.png", w1, h1, c1);
+
+    // Now load and compute PSNR against bilinear output in a tight block
+    {
+        std::vector<unsigned char> upscaledImage = loadImage("output_esrgan.png", w2, h2, c2);
+        if (w1 != w2 || h1 != h2 || c1 != c2) {
+            std::cerr << "Image dimensions do not match\n";
+        } else {
+            std::cout << "PSNR for output_bilinear.png: " << computePSNR(groundTruth, upscaledImage) << " dB\n";
+        }
     }
 
-    //for visual comparison of upscaled images
-    nearestNeighborSampling("input_compressed.jpg");
 
-    //to calc PSNR
-    nearestNeighborSampling("input.jpg");
+
+
+
+
+    // auto groundTruth = loadImage("resized_true_input.png", w1, h1, c1);
+
+    // if (!std::filesystem::exists("output_esrgan.png")) {
+    //     std::cerr << "output_esrgan.png was not generated. Skipping PSNR.\n";
+    //     return 1;
+    // }
+    // std::cerr << "attempting to load output_esrgan.png" << std::endl;
+
+    // auto upscaledImage = loadImage("output_esrgan.png", w2, h2, c2);
+    
+
+    // // check if images have same dimensions
+    // if (w1 != w2 || h1 != h2 || c1 != c2) {
+    //     std::cerr << "Images must have the same dimensions for PSNR\n";
+    // } else { //
+    //     std::cout << "The PSNR for output_esrgan.png is: " << computePSNR(groundTruth, upscaledImage) << " dB\n";
+    // }
+
+
+    // auto upscaledImage = loadImage("output_bilinear.png", w2, h2, c2);
+
+    
+
+    // // check if images have same dimensions
+    // if (w1 != w2 || h1 != h2 || c1 != c2) {
+    //     std::cerr << "Images must have the same dimensions for PSNR\n";
+    // } else { //
+    //     std::cout << "The PSNR for output_bilinear.png is: " << computePSNR(groundTruth, upscaledImage) << " dB\n";
+    // }
+
+    // groundTruth = loadImage("resized_true_input.png", w1, h1, c1);
+    // upscaledImage = loadImage("resized_true_input.png", w2, h2, c2);
+
+    // // check if images have same dimensions
+    // if (w1 != w2 || h1 != h2 || c1 != c2) {
+    //     std::cerr << "Images must have the same dimensions for PSNR\n";
+    // } else { //
+    //     std::cout << "The PSNR for resized_true_input.png is: " << computePSNR(groundTruth, upscaledImage) << " dB\n";
+    // }
 
     // // run tests
     // ::testing::InitGoogleTest(&argc, argv);
