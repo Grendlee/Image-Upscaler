@@ -14,7 +14,7 @@ This project performs image upscaling using two different methods:
    - A deep learning-based upscaling method that produces photorealistic details.
    - External Pre-trained ESRGAN found here: **[Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN/?tab=readme-ov-file)** for deep-learning-based super-resolution.
      
-3. **True Pixel Resize (Nearest Neighbor)**
+3. **True Pixel Resize (Nearest Neighbour)**
    - Directly replicates pixel values to scale the image.
    - Fastest method with no interpolation.
    - Useful for testing baseline performance or preserving sharp edges in pixel art.
@@ -27,7 +27,8 @@ This project performs image upscaling using two different methods:
 To evaluate upscaling quality, this project uses:
 
 1. **PSNR (Peak Signal-to-Noise Ratio)**  
-   - Measures how close the upscaled image is to a known high-resolution image.  
+   - Measures how close the upscaled image is to a known high-resolution image.
+   - To compare the PSNR we need to resize the original input.jpg with nearest neighbour by a factor of 4, since both our bilinear upscaling and ESRGAN also upscale by a factor of 4. This way we can compare pixel-by-pixel noise.
    - Higher is better.  
    - A value above **30 dB** is generally considered good. A value above **40 dB** is considered excellent, indicating that the upscaled image is nearly indistinguishable from the original high-resolution image.
 
@@ -52,7 +53,33 @@ Google Test is used to:
 
 ## Compile
 
-Use the following command to compile with **Microsoft Visual C++ (`cl`)**:
+Use the following command to compile with g++:
 
 ```cmd
-g++ -std=c++17 -O2 -o upscaler main.cpp     
+g++ -std=c++17 -O2 -o upscaler main.cpp
+```
+
+dev notes:
+
+#ifndef STBI_MAX_DIMENSIONS
+#define STBI_MAX_DIMENSIONS 16384
+#endif
+
+changed to  1<< 30
+
+
+rying to load: resized_true_input.png
+Trying to load: output_bilinear.png
+stbi_load failed. Reason: outofmem
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Failed to load output_bilinear.png
+
+
+
+
+g++.exe main.cpp `
+  -I"opencv/include" `
+  -L"opencv/x64/mingw/lib" `
+  -lopencv_core455 -lopencv_imgcodecs455 -lopencv_highgui455 -lopencv_imgproc455 `
+  -o upscaler.exe
+
