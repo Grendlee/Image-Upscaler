@@ -13,6 +13,11 @@ This project performs image upscaling using two different methods:
 2. **Pre-trained ESRGAN (Enhanced Super Resolution GAN)**
    - A deep learning-based upscaling method that produces photorealistic details.
    - External Pre-trained ESRGAN found here: **[Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN/?tab=readme-ov-file)** for deep-learning-based super-resolution.
+     
+3. **True Pixel Resize (Nearest Neighbor)**
+   - Directly replicates pixel values to scale the image.
+   - Fastest method with no interpolation.
+   - Useful for testing baseline performance or preserving sharp edges in pixel art.
 
 ---
 
