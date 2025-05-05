@@ -13,6 +13,12 @@ This project performs image upscaling using two different methods:
 2. **Pre-trained ESRGAN (Enhanced Super Resolution GAN)**
    - A deep learning-based upscaling method that produces photorealistic details.
    - External Pre-trained ESRGAN found here: **[Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN/?tab=readme-ov-file)** for deep-learning-based super-resolution.
+     
+3. **True Pixel Resize (Nearest Neighbor)**
+   - Directly replicates pixel values to scale the image.
+   - Fastest method with no interpolation.
+   - Useful for testing baseline performance or preserving sharp edges in pixel art.
+   - Needed to compare peak-signal-to-noise-ration (PSNR) later.
 
 ---
 
@@ -49,4 +55,4 @@ Google Test is used to:
 Use the following command to compile with **Microsoft Visual C++ (`cl`)**:
 
 ```cmd
-g++ main.cpp -o upscaler.exe -std=c++17
+g++ -std=c++17 -O2 -o upscaler main.cpp     
