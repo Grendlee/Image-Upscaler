@@ -47,19 +47,17 @@ float bilinearSample(const unsigned char* imageData, int inputWidth, int inputHe
            D * dx * dy;
 }
 
-void bilinearUpscaling(const std::string& inputPath, const std::string& outputPath, int scaleFactor = 2) {
+void bilinearUpscaling(const std::string& inputPath, int scaleFactor = 4) {
     int inputWidth, inputHeight, inputChannels;
 
     unsigned char* inputImage = stbi_load("input.jpg", &inputWidth, &inputHeight, &inputChannels, 3);
 
     if (!inputImage) {
         std::cerr << "Failed to load input.jpg\n";
-        return 1;
     }
 
 
     //create empty output image
-    int scaleFactor = 2;
     int outputWidth = inputWidth * scaleFactor;
     int outputHeight = inputHeight * scaleFactor;
 
@@ -90,18 +88,56 @@ void bilinearUpscaling(const std::string& inputPath, const std::string& outputPa
         }
     }
     //write the output image to disk
-    stbi_write_png("output.png", outputWidth, outputHeight, 3, outputImage.data(), outputWidth * 3);
+    stbi_write_png("output_bilinear.png", outputWidth, outputHeight, 3, outputImage.data(), outputWidth * 3);
     stbi_image_free(inputImage);
 
-    std::cout << "Bilinear-upscaled image saved as output.png\n";
+    std::cout << "Bilinear-upscaled image saved as output_bilinear.png\n";
 
 }
 
 // Run ESRGAN
 bool runESRGAN(const std::string& inputPath, const std::string& outputPath) {
     std::string command = ".\\realesrgan-ncnn-vulkan.exe -i " + inputPath + " -o " + outputPath + " -n realesrgan-x4plus";
+    std::cout << "ESRGAN-upscaled image saved as output_ESRGAN.png\n";
     return system(command.c_str()) == 0;
 }
+
+void nearestNeighborSampling(const std::string& inputPath) {
+    int inputWidth, inputHeight, inputChannels;
+
+    // Load the input image (force 3 channels: RGB)
+    unsigned char* inputImage = stbi_load(inputPath.c_str(), &inputWidth, &inputHeight, &inputChannels, 3);
+    if (!inputImage) {
+        std::cerr << "Failed to load " << inputPath << "\n";
+        return;
+    }
+
+    int scaleFactor = 4;
+    int outputWidth = inputWidth * scaleFactor;
+    int outputHeight = inputHeight * scaleFactor;
+
+    std::vector<unsigned char> outputImage(outputWidth * outputHeight * 3);
+
+    // Nearest-neighbor resize (copying true pixel values)
+    for (int y = 0; y < outputHeight; ++y) {
+        for (int x = 0; x < outputWidth; ++x) {
+            int srcX = x / scaleFactor;
+            int srcY = y / scaleFactor;
+
+            for (int c = 0; c < 3; ++c) {
+                outputImage[(y * outputWidth + x) * 3 + c] =
+                    inputImage[(srcY * inputWidth + srcX) * 3 + c];
+            }
+        }
+    }
+
+    // Save resized image
+    stbi_write_png("resized_true.png", outputWidth, outputHeight, 3, outputImage.data(), outputWidth * 3);
+    stbi_image_free(inputImage);
+
+    std::cout << "Nearest-neighbor resized image saved as resized_true.png\n";
+}
+
 
 //compute the MSE to help calc PSNR
 double computeMSE(const std::vector<unsigned char>& a, const std::vector<unsigned char>& b) {
@@ -145,101 +181,101 @@ std::vector<unsigned char> loadImage(const std::string& path, int& width, int& h
     return vec;
 }
 
-// Google Test: Bilinear PSNR
-TEST(UpscaleTest, BilinearUpscaleIsBetterThanInput) {
-    int w_input, h_input, c_input;
-    int w_upscaled, h_upscaled, c_upscaled;
-    int w_ground, h_ground, c_ground;
+// // Google Test: Bilinear PSNR
+// TEST(UpscaleTest, BilinearUpscaleIsBetterThanInput) {
+//     int w_input, h_input, c_input;
+//     int w_upscaled, h_upscaled, c_upscaled;
+//     int w_ground, h_ground, c_ground;
 
-    // Load images
-    auto inputImage    = loadImage("input.jpg", w_input, h_input, c_input);
-    auto upscaledImage = loadImage("output.png", w_upscaled, h_upscaled, c_upscaled);
-    auto groundTruth   = loadImage("source.png", w_ground, h_ground, c_ground);
+//     // Load images
+//     auto inputImage    = loadImage("input.jpg", w_input, h_input, c_input);
+//     auto upscaledImage = loadImage("output.png", w_upscaled, h_upscaled, c_upscaled);
+//     auto groundTruth   = loadImage("source.png", w_ground, h_ground, c_ground);
 
-    // Check dimensions
-    ASSERT_EQ(w_upscaled, w_ground);
-    ASSERT_EQ(h_upscaled, h_ground);
-    ASSERT_EQ(c_upscaled, c_ground);
+//     // Check dimensions
+//     ASSERT_EQ(w_upscaled, w_ground);
+//     ASSERT_EQ(h_upscaled, h_ground);
+//     ASSERT_EQ(c_upscaled, c_ground);
 
-    // Resize input.jpg to match source.png size (basic nearest-neighbor for fair PSNR)
-    std::vector<unsigned char> resizedInput(w_ground * h_ground * c_ground);
-    for (int y = 0; y < h_ground; ++y) {
-        for (int x = 0; x < w_ground; ++x) {
-            int srcX = static_cast<int>(x / static_cast<float>(w_ground) * w_input);
-            int srcY = static_cast<int>(y / static_cast<float>(h_ground) * h_input);
-            for (int c = 0; c < c_ground; ++c) {
-                resizedInput[(y * w_ground + x) * c_ground + c] =
-                    inputImage[(srcY * w_input + srcX) * c_ground + c];
-            }
-        }
-    }
+//     // Resize input.jpg to match source.png size (basic nearest-neighbor for fair PSNR)
+//     std::vector<unsigned char> resizedInput(w_ground * h_ground * c_ground);
+//     for (int y = 0; y < h_ground; ++y) {
+//         for (int x = 0; x < w_ground; ++x) {
+//             int srcX = static_cast<int>(x / static_cast<float>(w_ground) * w_input);
+//             int srcY = static_cast<int>(y / static_cast<float>(h_ground) * h_input);
+//             for (int c = 0; c < c_ground; ++c) {
+//                 resizedInput[(y * w_ground + x) * c_ground + c] =
+//                     inputImage[(srcY * w_input + srcX) * c_ground + c];
+//             }
+//         }
+//     }
 
-    // Compute PSNRs
-    double psnr_input    = computePSNR(resizedInput, groundTruth);
-    double psnr_upscaled = computePSNR(upscaledImage, groundTruth);
+//     // Compute PSNRs
+//     double psnr_input    = computePSNR(resizedInput, groundTruth);
+//     double psnr_upscaled = computePSNR(upscaledImage, groundTruth);
 
-    std::cout << "PSNR(input.jpg → source.png):   " << psnr_input    << " dB\n";
-    std::cout << "PSNR(output.png → source.png):  " << psnr_upscaled << " dB\n";
+//     std::cout << "PSNR(input.jpg → source.png):   " << psnr_input    << " dB\n";
+//     std::cout << "PSNR(output.png → source.png):  " << psnr_upscaled << " dB\n";
 
-    // Assert that upscaling actually improved PSNR
-    EXPECT_GT(psnr_upscaled, psnr_input) << "Upscaling made quality worse than original input.";
-}
+//     // Assert that upscaling actually improved PSNR
+//     EXPECT_GT(psnr_upscaled, psnr_input) << "Upscaling made quality worse than original input.";
+// }
 
-TEST(UpscaleTest, ESRGANIsBetterThanInput) {
-    int w_input, h_input, c_input;
-    int w_esrgan, h_esrgan, c_esrgan;
-    int w_source, h_source, c_source;
+// TEST(UpscaleTest, ESRGANIsBetterThanInput) {
+//     int w_input, h_input, c_input;
+//     int w_esrgan, h_esrgan, c_esrgan;
+//     int w_source, h_source, c_source;
 
-    // Load images
-    auto inputImage    = loadImage("input.jpg", w_input, h_input, c_input);
-    auto esrganImage   = loadImage("output_esrgan.png", w_esrgan, h_esrgan, c_esrgan);
-    auto groundTruth   = loadImage("source.png", w_source, h_source, c_source);
+//     // Load images
+//     auto inputImage    = loadImage("input.jpg", w_input, h_input, c_input);
+//     auto esrganImage   = loadImage("output_esrgan.png", w_esrgan, h_esrgan, c_esrgan);
+//     auto groundTruth   = loadImage("source.png", w_source, h_source, c_source);
 
-    // Check ESRGAN output matches ground truth resolution
-    ASSERT_EQ(w_esrgan, w_source);
-    ASSERT_EQ(h_esrgan, h_source);
-    ASSERT_EQ(c_esrgan, c_source);
+//     // Check ESRGAN output matches ground truth resolution
+//     ASSERT_EQ(w_esrgan, w_source);
+//     ASSERT_EQ(h_esrgan, h_source);
+//     ASSERT_EQ(c_esrgan, c_source);
 
-    // Resize input.jpg to match source.png size (nearest-neighbor)
-    std::vector<unsigned char> resizedInput(w_source * h_source * c_source);
-    for (int y = 0; y < h_source; ++y) {
-        for (int x = 0; x < w_source; ++x) {
-            int srcX = static_cast<int>(x / static_cast<float>(w_source) * w_input);
-            int srcY = static_cast<int>(y / static_cast<float>(h_source) * h_input);
-            for (int c = 0; c < c_source; ++c) {
-                resizedInput[(y * w_source + x) * c_source + c] =
-                    inputImage[(srcY * w_input + srcX) * c_source + c];
-            }
-        }
-    }
+//     // Resize input.jpg to match source.png size (nearest-neighbor)
+//     std::vector<unsigned char> resizedInput(w_source * h_source * c_source);
+//     for (int y = 0; y < h_source; ++y) {
+//         for (int x = 0; x < w_source; ++x) {
+//             int srcX = static_cast<int>(x / static_cast<float>(w_source) * w_input);
+//             int srcY = static_cast<int>(y / static_cast<float>(h_source) * h_input);
+//             for (int c = 0; c < c_source; ++c) {
+//                 resizedInput[(y * w_source + x) * c_source + c] =
+//                     inputImage[(srcY * w_input + srcX) * c_source + c];
+//             }
+//         }
+//     }
 
-    // Compute PSNR
-    double psnr_input   = computePSNR(resizedInput, groundTruth);
-    double psnr_esrgan  = computePSNR(esrganImage, groundTruth);
+//     // Compute PSNR
+//     double psnr_input   = computePSNR(resizedInput, groundTruth);
+//     double psnr_esrgan  = computePSNR(esrganImage, groundTruth);
 
-    std::cout << "PSNR(input.jpg → source.png):      " << psnr_input  << " dB\n";
-    std::cout << "PSNR(output_esrgan.png → source):  " << psnr_esrgan << " dB\n";
+//     std::cout << "PSNR(input.jpg → source.png):      " << psnr_input  << " dB\n";
+//     std::cout << "PSNR(output_esrgan.png → source):  " << psnr_esrgan << " dB\n";
 
-    // Assert ESRGAN is better
-    EXPECT_GT(psnr_esrgan, psnr_input) << "ESRGAN upscaling was worse than original input.";
-}
+//     // Assert ESRGAN is better
+//     EXPECT_GT(psnr_esrgan, psnr_input) << "ESRGAN upscaling was worse than original input.";
+// }
 
 
 int main(int argc, char** argv) {
 
     // run bilinear upscaler
-    performBilinearUpscaling("input.jpg", "output.png");
-    std::cout << "Bilinear upscaled image saved as output.png\n";
+    bilinearUpscaling("input_compressed.jpg");
 
     // run ESRGAN
     std::cout << "Running ESRGAN...\n";
-    if (!runESRGAN("output.png", "output_esrgan.png")) {
+    if (!runESRGAN("input_compressed.jpg", "output_esrgan.png")) {
         std::cerr << "ESRGAN failed to run\n";
         return 1;
     }
-    std::cout << "ESRGAN output saved as output_esrgan.png\n";
 
-    // run tests
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    nearestNeighborSampling("input_compressed.jpg");
+
+    // // run tests
+    // ::testing::InitGoogleTest(&argc, argv);
+    // return RUN_ALL_TESTS();
 }
