@@ -66,3 +66,10 @@ dev notes:
 #endif
 
 changed to  1<< 30
+
+
+rying to load: resized_true_input.png
+Trying to load: output_bilinear.png
+stbi_load failed. Reason: outofmem
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Failed to load output_bilinear.png
