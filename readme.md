@@ -56,4 +56,13 @@ Google Test is used to:
 Use the following command to compile with g++:
 
 ```cmd
-g++ -std=c++17 -O2 -o upscaler main.cpp     
+g++ -std=c++17 -O2 -o upscaler main.cpp
+```
+
+dev notes:
+
+#ifndef STBI_MAX_DIMENSIONS
+#define STBI_MAX_DIMENSIONS 16384
+#endif
+
+changed to  1<< 30
