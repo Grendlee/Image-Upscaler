@@ -55,4 +55,4 @@ Google Test is used to:
 Use the following command to compile with **Microsoft Visual C++ (`cl`)**:
 
 ```cmd
-g++ main.cpp -o upscaler.exe -std=c++17
+g++ -std=c++17 -O2 -o upscaler main.cpp     
