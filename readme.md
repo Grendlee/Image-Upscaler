@@ -73,3 +73,13 @@ Trying to load: output_bilinear.png
 stbi_load failed. Reason: outofmem
 terminate called after throwing an instance of 'std::runtime_error'
   what():  Failed to load output_bilinear.png
+
+
+
+
+g++.exe main.cpp `
+  -I"opencv/include" `
+  -L"opencv/x64/mingw/lib" `
+  -lopencv_core455 -lopencv_imgcodecs455 -lopencv_highgui455 -lopencv_imgproc455 `
+  -o upscaler.exe
+
