@@ -273,7 +273,11 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    //for visual comparison of upscaled images
     nearestNeighborSampling("input_compressed.jpg");
+
+    //to calc PSNR
+    nearestNeighborSampling("input.jpg");
 
     // // run tests
     // ::testing::InitGoogleTest(&argc, argv);
