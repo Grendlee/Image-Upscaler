@@ -42,14 +42,10 @@ To evaluate the quality of upscaled images, the following metrics are used:
 
 ---
 
-## Google Test Integration
+## Google Test Integration _(work in progress)_
 
 Tests include:
 - Comparing outputs (`output_bilinear.png`, `output_esrgan.png`) to `resized_true_input.png`
-- Asserting:
-  - `PSNR(output_bilinear.png) > PSNR(input.jpg)`
-  - `PSNR(output_esrgan.png) > PSNR(input.jpg)` _(note: may not always hold due to GAN artifacts)_
-
 ---
 
 ## Compilation
