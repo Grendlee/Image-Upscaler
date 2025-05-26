@@ -294,9 +294,10 @@ TEST(UpscaleTest, input_compressedEXISTS) {
 
 int main(int argc, char** argv) {
 
-    // run tests
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    if (argc > 1 && std::string(argv[1]) == "test") {
+        ::testing::InitGoogleTest(&argc, argv);
+        return RUN_ALL_TESTS();
+    }
     
     // run bilinear upscaler
     bilinearUpscaling("input_compressed.jpg");
