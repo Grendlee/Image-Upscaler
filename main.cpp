@@ -201,6 +201,16 @@ void computeAndPrintPSNR(const std::string& ground, const std::string& test) {
 }
 
 
+TEST(UpscaleTest, inputEXISTS) {
+    EXPECT_TRUE(std::filesystem::exists("input.jpg")) 
+        << "input.jpg not found. Need input.jpg to run the program.";
+}
+
+TEST(UpscaleTest, input_compressedEXISTS) {
+    EXPECT_TRUE(std::filesystem::exists("input_compressed.jpg")) 
+        << "input_compressed.jpg not found. Need input_compressed.jpg to run the program.";
+}
+
 
 // // Google Test: Bilinear PSNR
 // TEST(UpscaleTest, BilinearUpscaleIsBetterThanInput) {
@@ -284,6 +294,10 @@ void computeAndPrintPSNR(const std::string& ground, const std::string& test) {
 
 int main(int argc, char** argv) {
 
+    // run tests
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+    
     // run bilinear upscaler
     bilinearUpscaling("input_compressed.jpg");
 
