@@ -212,88 +212,9 @@ TEST(UpscaleTest, input_compressedEXISTS) {
 }
 
 
-// // Google Test: Bilinear PSNR
-// TEST(UpscaleTest, BilinearUpscaleIsBetterThanInput) {
-//     int w_input, h_input, c_input;
-//     int w_upscaled, h_upscaled, c_upscaled;
-//     int w_ground, h_ground, c_ground;
-
-//     // Load images
-//     auto inputImage    = loadImage("input.jpg", w_input, h_input, c_input);
-//     auto upscaledImage = loadImage("output.png", w_upscaled, h_upscaled, c_upscaled);
-//     auto groundTruth   = loadImage("source.png", w_ground, h_ground, c_ground);
-
-//     // Check dimensions
-//     ASSERT_EQ(w_upscaled, w_ground);
-//     ASSERT_EQ(h_upscaled, h_ground);
-//     ASSERT_EQ(c_upscaled, c_ground);
-
-//     // Resize input.jpg to match source.png size (basic nearest-neighbor for fair PSNR)
-//     std::vector<unsigned char> resizedInput(w_ground * h_ground * c_ground);
-//     for (int y = 0; y < h_ground; ++y) {
-//         for (int x = 0; x < w_ground; ++x) {
-//             int srcX = static_cast<int>(x / static_cast<float>(w_ground) * w_input);
-//             int srcY = static_cast<int>(y / static_cast<float>(h_ground) * h_input);
-//             for (int c = 0; c < c_ground; ++c) {
-//                 resizedInput[(y * w_ground + x) * c_ground + c] =
-//                     inputImage[(srcY * w_input + srcX) * c_ground + c];
-//             }
-//         }
-//     }
-
-//     // Compute PSNRs
-//     double psnr_input    = computePSNR(resizedInput, groundTruth);
-//     double psnr_upscaled = computePSNR(upscaledImage, groundTruth);
-
-//     std::cout << "PSNR(input.jpg → source.png):   " << psnr_input    << " dB\n";
-//     std::cout << "PSNR(output.png → source.png):  " << psnr_upscaled << " dB\n";
-
-//     // Assert that upscaling actually improved PSNR
-//     EXPECT_GT(psnr_upscaled, psnr_input) << "Upscaling made quality worse than original input.";
-// }
-
-// TEST(UpscaleTest, ESRGANIsBetterThanInput) {
-//     int w_input, h_input, c_input;
-//     int w_esrgan, h_esrgan, c_esrgan;
-//     int w_source, h_source, c_source;
-
-//     // Load images
-//     auto inputImage    = loadImage("input.jpg", w_input, h_input, c_input);
-//     auto esrganImage   = loadImage("output_esrgan.png", w_esrgan, h_esrgan, c_esrgan);
-//     auto groundTruth   = loadImage("source.png", w_source, h_source, c_source);
-
-//     // Check ESRGAN output matches ground truth resolution
-//     ASSERT_EQ(w_esrgan, w_source);
-//     ASSERT_EQ(h_esrgan, h_source);
-//     ASSERT_EQ(c_esrgan, c_source);
-
-//     // Resize input.jpg to match source.png size (nearest-neighbor)
-//     std::vector<unsigned char> resizedInput(w_source * h_source * c_source);
-//     for (int y = 0; y < h_source; ++y) {
-//         for (int x = 0; x < w_source; ++x) {
-//             int srcX = static_cast<int>(x / static_cast<float>(w_source) * w_input);
-//             int srcY = static_cast<int>(y / static_cast<float>(h_source) * h_input);
-//             for (int c = 0; c < c_source; ++c) {
-//                 resizedInput[(y * w_source + x) * c_source + c] =
-//                     inputImage[(srcY * w_input + srcX) * c_source + c];
-//             }
-//         }
-//     }
-
-//     // Compute PSNR
-//     double psnr_input   = computePSNR(resizedInput, groundTruth);
-//     double psnr_esrgan  = computePSNR(esrganImage, groundTruth);
-
-//     std::cout << "PSNR(input.jpg → source.png):      " << psnr_input  << " dB\n";
-//     std::cout << "PSNR(output_esrgan.png → source):  " << psnr_esrgan << " dB\n";
-
-//     // Assert ESRGAN is better
-//     EXPECT_GT(psnr_esrgan, psnr_input) << "ESRGAN upscaling was worse than original input.";
-// }
-
-
 int main(int argc, char** argv) {
 
+    //gtest logic to ensure input files valid
     if (argc > 1 && std::string(argv[1]) == "test") {
         ::testing::InitGoogleTest(&argc, argv);
         return RUN_ALL_TESTS();
@@ -362,9 +283,5 @@ int main(int argc, char** argv) {
     } else { //
         std::cout << "The PSNR for resized_true_input.png is: " << computePSNR(groundTruth, upscaledImage) << " dB\n";
         std::cout << "If PSNR is inf, this is expected as there are no differences between the two images";
-    }
-
-    // // run tests
-    // ::testing::InitGoogleTest(&argc, argv);
-    // return RUN_ALL_TESTS();
+    
 }
