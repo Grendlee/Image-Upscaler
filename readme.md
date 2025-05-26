@@ -69,6 +69,17 @@ Compile:
 ```
 
 ---
+## Running the program or tests
+Run the tests to insure you have the correct input files:
+```
+./ImageTest test
+```
+Run the upscaling program:
+```
+./ImageTest
+```
+
+---
 
 ## Platform-Specific Instructions
 
