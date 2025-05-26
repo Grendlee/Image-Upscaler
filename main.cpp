@@ -12,7 +12,7 @@
 #include <fstream>
 #include <cstdlib> // for system()
 #include <filesystem>
-// #include <gtest/gtest.h>
+#include <gtest/gtest.h>
 
 // Performs bilinear interpolation on a single pixel channel (R, G, or B)
 float bilinearSample(const unsigned char* imageData, int inputWidth, int inputHeight, int numChannels, float sampleX, float sampleY, int colorChannel) {
