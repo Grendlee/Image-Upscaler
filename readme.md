@@ -50,9 +50,22 @@ Tests include:
 
 ## Compilation
  **Note:** Loading images on windows will cause a memory problem at "loadImage". Compiling using a Linux system is recommended.
+ **Note:** Install google test with homebrew and change version number and directory if needed.
+
+```
+   brew install googletest
+```
+Compile:
 
 ```bash
-g++ -std=c++17 -O2 -o upscaler main.cpp
+   g++ -std=c++17 \
+       main.cpp \
+       -I. \
+       -I/opt/homebrew/Cellar/googletest/1.17.0/include \
+       -L/opt/homebrew/Cellar/googletest/1.17.0/lib \
+       -lgtest -lgtest_main -lpthread \
+       -o upscaler
+
 ```
 
 ---
