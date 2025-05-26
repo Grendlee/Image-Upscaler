@@ -283,5 +283,5 @@ int main(int argc, char** argv) {
     } else { //
         std::cout << "The PSNR for resized_true_input.png is: " << computePSNR(groundTruth, upscaledImage) << " dB\n";
         std::cout << "If PSNR is inf, this is expected as there are no differences between the two images";
-    
+    }
 }
