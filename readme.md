@@ -42,7 +42,7 @@ To evaluate the quality of upscaled images, the following metrics are used:
 
 ---
 
-## Google Test Integration _(work in progress)_
+## Google Test Integration
 
 Tests include:
 - Testing if 'input.jpg' and 'input_compressed.jpg' exist
