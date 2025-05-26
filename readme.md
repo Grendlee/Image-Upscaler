@@ -32,20 +32,20 @@ To evaluate the quality of upscaled images, the following metrics are used:
      - Above **40 dB** = visually near-identical to ground truth
 
 >  **Note:** Despite being more advanced, **ESRGAN can show lower PSNR than bilinear**.  
-> This is because ESRGAN introduces **hallucinated high-frequency textures** to improve perceptual quality — which increases pixel-level difference, even when it **looks better** to the human eye.  
+> This is because ESRGAN introduces **hallucinated textures** to improve perceptual quality from lost information from unrecoverable information from the lower resolution/downsampled image, which increases pixel-level difference, even when it **looks better** to the human eye.  
 > Therefore, PSNR alone is **not a reliable metric** for GAN-based methods.
 
 ### 2. **LPIPS (Learned Perceptual Image Patch Similarity)** _(planned)_
    - Measures perceptual similarity using a deep neural network trained on human preference judgments.
    - Will be integrated via a **Python subprocess call** from C++, comparing ESRGAN and bilinear outputs to the resized ground truth.
-   - Significantly better at judging perceptual quality for GAN-based outputs.
+   - Significantly better at judging perceptual quality for GAN-based outputs. Enabling automatic perceptual quality evaluation.
 
 ---
 
 ## Google Test Integration _(work in progress)_
 
 Tests include:
-- Comparing outputs (`output_bilinear.png`, `output_esrgan.png`) to `resized_true_input.png`
+- Testing if 'input.jpg' and 'input_compressed.jpg' exist
 ---
 
 ## Compilation
